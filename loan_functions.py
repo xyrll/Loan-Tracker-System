@@ -1,17 +1,31 @@
+"""
+Loan Tracker System
+- Manages and Tracks loans with add/edit/delete and payment features.
+- Stores data in a simple text file ('loans.txt').
+"""
+
 import os
 
-BASE_DIR = os.path.dirname(__file__)
-loantracker = os.path.join(BASE_DIR, "loans.txt")
+loantracker = "loans.txt"
 
-# separator
+# separator line
 def print_line():
+    """
+    Print a separator line for clear sections
+    """
     print("  " + "=" * 91)
 
 # clear screen
 def clear_screen():
+    """
+    Clear the terminal screen for better menu navigation.
+    """
     os.system("cls" if os.name == "nt" else "clear")
 
 def is_valid_decimal(text):
+    """
+    Check if the input text is a valid decimal number.
+    """
     text = text.strip()
     if text == "":
         return False
@@ -21,7 +35,9 @@ def is_valid_decimal(text):
         return False
 
     if "." in text:
-        left, right = text.split(".")
+        parts = text.split(".")
+        left = parts[0]
+        right = parts[1]
         # allow ".5" and "5."
         if left != "" and not left.isdigit():
             return False
@@ -32,18 +48,22 @@ def is_valid_decimal(text):
     return text.isdigit()
 
 def is_valid_int(text):
+    """
+    Check if the input text is a valid integer.
+    """
     text = text.strip()
     return text.isdigit()
 
 def load_loans():
+    """
+    Load loan records from the text file and return as a list of records.
+    """
     loans = []
-
     if not os.path.exists(loantracker):
         return loans
 
-    file = open(loantracker, "r")
-    lines = file.read().split("\n")
-    file.close()
+    with open(loantracker, "r") as file:
+        lines = file.read().split("\n")
 
     for line in lines:
         line = line.strip()
@@ -51,7 +71,6 @@ def load_loans():
             continue
 
         fields = line.split(",")
-
         if len(fields) == 6:
             loan_id       = fields[0].strip()
             borrower      = fields[1].strip()
@@ -59,22 +78,23 @@ def load_loans():
             interest_rate = float(fields[3].strip())
             months        = int(fields[4].strip())
             amount_paid   = float(fields[5].strip())
-
             record = [loan_id, borrower, loan_amount, interest_rate, months, amount_paid]
             loans.append(record)
-
     return loans
 
 def save_loans(loans):
-    file = open(loantracker, "w")
-
-    for record in loans:
-        line = f"{record[0]},{record[1]},{record[2]},{record[3]},{record[4]},{record[5]}\n"
-        file.write(line)
-
-    file.close()
+    """
+    Save the list of loan records back to the text file.
+    """
+    with open(loantracker, "w") as file:
+        for record in loans:
+            line = f"{record[0]},{record[1]},{record[2]},{record[3]},{record[4]},{record[5]}\n"
+            file.write(line)
 
 def generate_id(loans):
+    """
+    Generate a new unique loan ID based on existing records.
+    """
     if len(loans) == 0:
         return "L001"
 
@@ -89,6 +109,9 @@ def generate_id(loans):
         return "L" + str(number)
 
 def compute_balance(record):
+    """
+    Compute total payable, monthly payment, and remaining balance for a loan record.
+    """
     loan_amount   = record[2]
     interest_rate = record[3]
     months        = record[4]
@@ -108,7 +131,15 @@ def compute_balance(record):
     return total_payable, payable_per_month, remaining
 
 def display_loan_details(record, detail_level="full"):
-    loan_id, borrower, loan_amount, interest_rate, months, amount_paid = record
+    """
+    Display loan details based on the specified detail level (minimal, summary, full).
+    """
+    loan_id = record[0]
+    borrower = record[1]
+    loan_amount = record[2]
+    interest_rate = record[3]
+    months = record[4]
+    amount_paid = record[5]
 
     if detail_level == "minimal":
         print(f"  Loan ID:   {loan_id}")
@@ -144,6 +175,9 @@ def display_loan_details(record, detail_level="full"):
     print_line()
 
 def display_loans_table(loans):
+    """
+    Display all loan records in a formatted table.
+    """
     if len(loans) == 0:
         print("No loan records found.".center(90))
         return
@@ -176,6 +210,9 @@ def display_loans_table(loans):
         )
 
 def add_loan(loans):
+    """
+    Add a new loan record with user input and validation.
+    """
     while True:
         clear_screen()
         print_line()
@@ -270,6 +307,9 @@ def add_loan(loans):
     input("  Press Enter to continue...")
 
 def view_loans(loans):
+    """
+    Display a summary of all loan records with totals and counts.
+    """
     clear_screen()
     print_line()
     print("ALL LOAN RECORDS".center(91))
@@ -292,10 +332,10 @@ def view_loans(loans):
 
     for record in loans:
         total_payable, payable_per_month, remaining = compute_balance(record)
-        total_loaned    += record[2]
-        total_monthly   += payable_per_month
-        total_collected += record[5]
-        total_remaining += remaining
+        total_loaned = total_loaned + record[2]
+        total_monthly   = total_monthly + payable_per_month
+        total_collected = total_collected + record[5]
+        total_remaining = total_remaining + remaining
         if remaining == 0:
             fully_paid_count += 1
 
@@ -314,6 +354,9 @@ def view_loans(loans):
     print_line()
 
 def edit_loan(loans):
+    """
+    Edit an existing loan record and record a payment.
+    """
     clear_screen()
     print_line()
     print("EDIT LOAN".center(91))
@@ -339,6 +382,9 @@ def edit_loan(loans):
         input("  Press Enter to continue...")
 
 def modify_loan(loans):
+    """
+    Modify details of an existing loan record.
+    """
     clear_screen()
     print_line()
     print("MODIFY LOAN".center(90))
@@ -387,6 +433,9 @@ def modify_loan(loans):
         input("  Press Enter to continue...")
 
 def edit_borrower_name(loans, found_index):
+    """
+    Edit the borrower name of a loan record.
+    """
     print_line()
     
     new_name = input("  New Borrower Name: ").strip()
@@ -407,6 +456,9 @@ def edit_borrower_name(loans, found_index):
     input("  Press Enter to continue...")
 
 def edit_interest_rate(loans, found_index):
+    """
+    Edit the interest rate of a loan record.
+    """
     print_line()
     
     rate_input = input("  New Interest Rate (%): ").strip()
@@ -435,6 +487,9 @@ def edit_interest_rate(loans, found_index):
     input("  Press Enter to continue...")
 
 def edit_loan_amount(loans, found_index):
+    """
+    Edit the loan amount of a loan record.
+    """
     print_line()
     
     amount_input = input("  New Loan Amount (PHP): ").strip()
@@ -461,6 +516,9 @@ def edit_loan_amount(loans, found_index):
     input("  Press Enter to continue...")
 
 def edit_duration(loans, found_index):
+    """
+    Edit the duration of a loan record.
+    """
     print_line()
     
     duration_input = input("  New Duration (months): ").strip()
@@ -489,6 +547,9 @@ def edit_duration(loans, found_index):
     input("  Press Enter to continue...")
 
 def get_loan_by_id(loans):
+    """ 
+    Ask the user for a Loan ID and return the matching loan index.
+    """
     while True:
         clear_screen()
         print_line()
@@ -510,12 +571,18 @@ def get_loan_by_id(loans):
         input("  Press Enter to continue...")
 
 def show_record_payment_header():
+    """
+    Display the header for the record payment screen.
+    """
     clear_screen()
     print_line()
     print("RECORD PAYMENT".center(91))
     print_line()
 
 def validate_payment_input(payment_input, remaining):
+    """
+    Validate the payment input and return the payment amount if valid, otherwise return None.
+    """
     if not is_valid_decimal(payment_input):
         return None
 
@@ -531,6 +598,9 @@ def validate_payment_input(payment_input, remaining):
 
 
 def get_valid_payment(remaining):
+    """
+    Ask the user to input a payment amount that is valid and within the remaining balance.
+    """
     while True:
         show_record_payment_header()
         print(f"  Remaining Balance : PHP {remaining:,.2f}")
@@ -555,7 +625,9 @@ def get_valid_payment(remaining):
         input("  Press Enter to continue...")
 
 def pay_loans(loans):
-    
+    """ 
+    Record a payment for a specific loan and update the remaining balance.
+    """
     found_index = get_loan_by_id(loans)
     record = loans[found_index]
     total_payable, payable_per_month, remaining = compute_balance(record)
@@ -588,6 +660,9 @@ def pay_loans(loans):
     input("  Press Enter to continue...")
 
 def delete_loans(loans):
+    """
+    Delete a single loan record or all loan records with confirmation.
+    """
     clear_screen()
     print_line()
     print("DELETE LOANS".center(90))
@@ -616,6 +691,9 @@ def delete_loans(loans):
         input("  Press Enter to continue...")
 
 def delete_loan(loans):
+    """
+    Delete a single loan record after confirming the Loan ID and details.
+    """
     clear_screen()
     print_line()
     print("DELETE SINGLE LOAN".center(91))
@@ -657,6 +735,9 @@ def delete_loan(loans):
     input("  Press Enter to continue...")
 
 def delete_all_loans(loans):
+    """
+    Delete all loan records after confirming with the user.
+    """
     clear_screen()
     print_line()
     print("DELETE ALL LOANS".center(91))
