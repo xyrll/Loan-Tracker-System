@@ -9,6 +9,9 @@ from loan_functions import (
 )
 
 def main_menu():
+    """
+    Display the main menu and handle user navigation.
+    """
     loans = load_loans()
 
     while True:
